@@ -19,10 +19,10 @@
 
 + (instancetype)sharedInstance
 {
-    static MBXServer *instance = nil;
+    static id instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        instance = [MBXServer new];
+        instance = [self new];
     });
     return instance;
 }
