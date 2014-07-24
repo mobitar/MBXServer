@@ -17,7 +17,7 @@
 
 @implementation MBXServer
 
-+ (instancetype)server
++ (instancetype)sharedInstance
 {
     static MBXServer *instance = nil;
     static dispatch_once_t onceToken;

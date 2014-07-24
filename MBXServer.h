@@ -10,6 +10,8 @@
 
 @interface MBXServer : NSObject
 
++ (instancetype)sharedInstance;
+
 - (void)GET:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
 - (void)GETAbsolute:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
 - (void)PATCH:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
