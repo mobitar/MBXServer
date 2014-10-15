@@ -7,11 +7,8 @@
 //
 
 #import "MBXServer.h"
-#import "AFNetworking.h"
 
 @interface MBXServer ()
-
-@property (nonatomic) AFHTTPRequestOperationManager *manager;
 
 @end
 

@@ -7,10 +7,15 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "AFNetworking.h"
 
 @interface MBXServer : NSObject
 
+@property (nonatomic, strong) AFHTTPRequestOperationManager *manager;
+
 + (instancetype)sharedInstance;
+
+- (NSString *)host;
 
 - (void)GET:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
 - (void)GETAbsolute:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
