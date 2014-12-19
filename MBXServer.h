@@ -9,6 +9,9 @@
 #import <Foundation/Foundation.h>
 #import "AFNetworking.h"
 
+extern NSString *const MBXServerDidBecomeReachableNotification;
+extern NSString *const MBXServerDidBecomeUnreachableNotification;
+
 @interface MBXServer : NSObject
 
 @property (nonatomic, strong) AFHTTPRequestOperationManager *manager;

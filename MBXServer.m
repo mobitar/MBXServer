@@ -8,11 +8,30 @@
 
 #import "MBXServer.h"
 
+NSString *const MBXServerDidBecomeReachableNotification = @"MBXServerDidBecomeReachableNotification";
+NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecomeUnreachableNotification";
+
 @interface MBXServer ()
 
 @end
 
 @implementation MBXServer
+
+- (instancetype)init
+{
+    if(self = [super init]) {
+        [[AFNetworkReachabilityManager sharedManager] setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+            if(status == AFNetworkReachabilityStatusNotReachable || status == AFNetworkReachabilityStatusUnknown) {
+                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeUnreachableNotification object:nil];
+            } else {
+                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeReachableNotification object:nil];
+            }
+        }];
+
+        [[AFNetworkReachabilityManager sharedManager] startMonitoring];
+    }
+    return self;
+}
 
 + (instancetype)sharedInstance
 {
