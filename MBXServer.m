@@ -7,6 +7,7 @@
 //
 
 #import "MBXServer.h"
+#import "MBXJSONResponseSerializerWithData.h"
 
 NSString *const MBXServerDidBecomeReachableNotification = @"MBXServerDidBecomeReachableNotification";
 NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecomeUnreachableNotification";
@@ -48,38 +49,58 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
     @throw [NSException exceptionWithName:@"Must override" reason:nil userInfo:nil];    
 }
 
-- (AFHTTPRequestOperationManager *)manager
+- (MBXHTTPSessionManager *)manager
 {
     if(!_manager) {
-        AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-        manager.responseSerializer = [AFJSONResponseSerializer serializer];
+        MBXHTTPSessionManager *manager = [MBXHTTPSessionManager manager];
+        manager.responseSerializer = [MBXJSONResponseSerializerWithData serializer];
         [manager.responseSerializer setAcceptableContentTypes:[NSSet setWithArray:@[@"application/json"]]];
         self.manager = manager;
     }
     return _manager;
 }
 
+- (NSURL *)absoluteURLForPath:(NSString *)path
+{
+    return [NSURL URLWithString:[[self host] stringByAppendingPathComponent:path]];
+}
+
 - (void)GET:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
 {
-    [self GETAbsolute:[[self host] stringByAppendingPathComponent:path] parameters:params completion:completion];
+    [self GETAbsolute:[self absoluteURLForPath:path].absoluteString parameters:params completion:completion];
+}
+
+- (void)performRequest:(AFHTTPRequestOperation *)request
+{
+    [self.manager.operationQueue addOperation:request];
+}
+
+- (id)responseObjectForResponse:(NSURLResponse *)response
+                           data:(NSData *)data
+                          error:(NSError *__autoreleasing *)error
+{
+    id JSONObject = [self.manager.responseSerializer responseObjectForResponse:response data:data error:error];
+    return (JSONObject);
 }
 
 - (void)GETAbsolute:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
 {
-    [self.manager GET:path parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [self.manager GET:path parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSError *customError = [self error:error customUserInfo:operation.responseObject];
+    } failure:^(NSURLSessionDataTask *task, NSError *error) {
+        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
+        NSError *customError = [self error:error customUserInfo:responseObject];
         completion(nil, customError);
     }];
 }
 
 - (void)PATCH:(NSString *)path parameters:(NSDictionary *)params completion:(void (^)(id, NSError *))completion
 {
-    [self.manager PATCH:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [self.manager PATCH:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSError *customError = [self error:error customUserInfo:operation.responseObject];
+    } failure:^(NSURLSessionDataTask *task, NSError *error) {
+        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
+        NSError *customError = [self error:error customUserInfo:responseObject];
         completion(nil, customError);
     }];
 }
@@ -91,20 +112,22 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
 
 - (void)POSTAbsolute:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
 {
-    [self.manager POST:path parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [self.manager POST:path parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSError *customError = [self error:error customUserInfo:operation.responseObject];
+    } failure:^(NSURLSessionDataTask *task, NSError *error) {
+        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
+        NSError *customError = [self error:error customUserInfo:responseObject];
         completion(nil, customError);
     }];
 }
 
 - (void)DELETE:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
 {
-    [self.manager DELETE:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [self.manager DELETE:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSError *customError = [self error:error customUserInfo:operation.responseObject];
+    } failure:^(NSURLSessionDataTask *task, NSError *error) {
+        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
+        NSError *customError = [self error:error customUserInfo:responseObject];
         completion(nil, customError);
     }];
 }
