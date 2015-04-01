@@ -88,9 +88,11 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
     [self.manager GET:path parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
-        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
-        NSError *customError = [self error:error customUserInfo:responseObject];
-        completion(nil, customError);
+        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerDataKey];
+        if([responseObject isKindOfClass:[NSDictionary class]]) {
+            error = [self error:error customUserInfo:responseObject];
+        }
+        completion(nil, error);
     }];
 }
 
@@ -99,9 +101,11 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
     [self.manager PATCH:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
-        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
-        NSError *customError = [self error:error customUserInfo:responseObject];
-        completion(nil, customError);
+        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerDataKey];
+        if([responseObject isKindOfClass:[NSDictionary class]]) {
+            error = [self error:error customUserInfo:responseObject];
+        }
+        completion(nil, error);
     }];
 }
 
@@ -115,9 +119,11 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
     [self.manager POST:path parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
-        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
-        NSError *customError = [self error:error customUserInfo:responseObject];
-        completion(nil, customError);
+        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerDataKey];
+        if([responseObject isKindOfClass:[NSDictionary class]]) {
+            error = [self error:error customUserInfo:responseObject];
+        }
+        completion(nil, error);
     }];
 }
 
@@ -126,9 +132,11 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
     [self.manager DELETE:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
-        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
-        NSError *customError = [self error:error customUserInfo:responseObject];
-        completion(nil, customError);
+        id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerDataKey];
+        if([responseObject isKindOfClass:[NSDictionary class]]) {
+            error = [self error:error customUserInfo:responseObject];
+        }
+        completion(nil, error);
     }];
 }
 

@@ -9,7 +9,9 @@
 #import "AFURLResponseSerialization.h"
 
 /// NSError userInfo key that will contain response data
-static NSString * const MBXJSONResponseSerializerWithDataKey = @"MBXJSONResponseSerializerWithDataKey";
+static NSString * const MBXJSONResponseSerializerDataKey = @"MBXJSONResponseSerializerDataKey";
+static NSString * const MBXJSONResponseSerializerStringKey = @"MBXJSONResponseSerializerStringKey";
+
 
 @interface MBXJSONResponseSerializerWithData : AFJSONResponseSerializer
 
