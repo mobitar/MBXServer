@@ -14,7 +14,7 @@
 
 @implementation MBXServerController
 
-- (instancetype)initWithServer:(MBXServer *)server
+- (instancetype)initWithServer:(MBXSessionServer *)server
 {
     if(self = [super init]) {
         _server = server;

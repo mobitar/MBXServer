@@ -6,17 +6,17 @@
 //  Copyright (c) 2014 Freebie. All rights reserved.
 //
 
-#import "MBXServer.h"
+#import "MBXSessionServer.h"
 #import "MBXJSONResponseSerializerWithData.h"
 
 NSString *const MBXServerDidBecomeReachableNotification = @"MBXServerDidBecomeReachableNotification";
 NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecomeUnreachableNotification";
 
-@interface MBXServer ()
+@interface MBXSessionServer ()
 
 @end
 
-@implementation MBXServer
+@implementation MBXSessionServer
 
 - (instancetype)init
 {
@@ -49,15 +49,15 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
     @throw [NSException exceptionWithName:@"Must override" reason:nil userInfo:nil];    
 }
 
-- (MBXHTTPSessionManager *)manager
+- (MBXHTTPSessionManager *)sessionManager
 {
-    if(!_manager) {
+    if(!_sessionManager) {
         MBXHTTPSessionManager *manager = [MBXHTTPSessionManager manager];
         manager.responseSerializer = [MBXJSONResponseSerializerWithData serializer];
         [manager.responseSerializer setAcceptableContentTypes:[NSSet setWithArray:@[@"application/json"]]];
-        self.manager = manager;
+        self.sessionManager = manager;
     }
-    return _manager;
+    return _sessionManager;
 }
 
 - (NSURL *)absoluteURLForPath:(NSString *)path
@@ -70,22 +70,17 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
     [self GETAbsolute:[self absoluteURLForPath:path].absoluteString parameters:params completion:completion];
 }
 
-- (void)performRequest:(AFHTTPRequestOperation *)request
-{
-    [self.manager.operationQueue addOperation:request];
-}
-
 - (id)responseObjectForResponse:(NSURLResponse *)response
                            data:(NSData *)data
                           error:(NSError *__autoreleasing *)error
 {
-    id JSONObject = [self.manager.responseSerializer responseObjectForResponse:response data:data error:error];
+    id JSONObject = [self.sessionManager.responseSerializer responseObjectForResponse:response data:data error:error];
     return (JSONObject);
 }
 
 - (void)GETAbsolute:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
 {
-    [self.manager GET:path parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
+    [self.sessionManager GET:path parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
         id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
@@ -96,7 +91,7 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
 
 - (void)PATCH:(NSString *)path parameters:(NSDictionary *)params completion:(void (^)(id, NSError *))completion
 {
-    [self.manager PATCH:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
+    [self.sessionManager PATCH:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
         id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
@@ -112,7 +107,7 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
 
 - (void)POSTAbsolute:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
 {
-    [self.manager POST:path parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
+    [self.sessionManager POST:path parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
         id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
@@ -123,7 +118,7 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
 
 - (void)DELETE:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
 {
-    [self.manager DELETE:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
+    [self.sessionManager DELETE:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(NSURLSessionDataTask *task, id responseObject) {
         completion(responseObject, nil);
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
         id responseObject = [error.userInfo objectForKey:MBXJSONResponseSerializerWithDataKey];
