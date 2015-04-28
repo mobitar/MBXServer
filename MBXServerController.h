@@ -7,12 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "MBXServer.h"
+#import "MBXSessionServer.h"
 
 @interface MBXServerController : NSObject
 
-@property (nonatomic, readonly) MBXServer *server;
+@property (nonatomic, readonly) MBXSessionServer *server;
 
-- (instancetype)initWithServer:(MBXServer *)server;
+- (instancetype)initWithServer:(MBXSessionServer *)server;
 
 @end
