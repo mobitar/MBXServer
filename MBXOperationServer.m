@@ -7,6 +7,7 @@
 //
 
 #import "MBXOperationServer.h"
+#import "MBXSessionServer.h"
 
 @implementation MBXOperationServer
 
