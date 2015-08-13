@@ -90,6 +90,18 @@
     }];
 }
 
+- (void)GETAbsoluteData:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(NSData *responseData, NSError *error))completion
+{
+    [self.operationManager GET:path parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        completion(operation.responseData, nil);
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        if([operation.responseObject isKindOfClass:[NSDictionary class]]) {
+            error = [self error:error customUserInfo:operation.responseObject];
+        }
+        completion(nil, error);
+    }];
+}
+
 - (void)PATCH:(NSString *)path parameters:(NSDictionary *)params completion:(void (^)(id, NSError *))completion
 {
     [self.operationManager PATCH:[[self host] stringByAppendingPathComponent:path] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {

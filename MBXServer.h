@@ -19,4 +19,8 @@
 - (void)POSTAbsolute:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
 - (void)DELETE:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
 
+@optional
+
+- (void)GETAbsoluteData:(NSString *)path parameters:(NSDictionary *)params completion:(void(^)(NSData *responseData, NSError *error))completion;
+
 @end
