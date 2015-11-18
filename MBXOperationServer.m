@@ -14,7 +14,7 @@
 - (instancetype)init
 {
     if(self = [super init]) {
-        [[AFNetworkReachabilityManager sharedManager] setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+        [self.operationManager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
             if(status == AFNetworkReachabilityStatusNotReachable || status == AFNetworkReachabilityStatusUnknown) {
                 [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeUnreachableNotification object:nil];
             } else {
@@ -22,7 +22,7 @@
             }
         }];
         
-        [[AFNetworkReachabilityManager sharedManager] startMonitoring];
+        [self.operationManager.reachabilityManager startMonitoring];
     }
     return self;
 }
@@ -141,6 +141,24 @@
         }
         completion(nil, error);
     }];
+}
+
+- (AFHTTPRequestOperation *)performRequestForURL:(NSURL *)url HTTPMethod:(NSString *)method parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
+{
+    NSMutableURLRequest *request = [self.operationManager.requestSerializer requestWithMethod:method URLString:url.absoluteString parameters:params error:nil];
+    
+    AFHTTPRequestOperation *operation = [self.operationManager HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation * _Nonnull operation, id  _Nonnull responseObject) {
+        completion(responseObject, nil);
+    } failure:^(AFHTTPRequestOperation * _Nonnull operation, NSError * _Nonnull error) {
+        if([operation.responseObject isKindOfClass:[NSDictionary class]]) {
+            error = [self error:error customUserInfo:operation.responseObject];
+        }
+        completion(nil, error);
+    }];
+    
+    [self.operationManager.operationQueue addOperation:operation];
+    
+    return operation;
 }
 
 - (NSError *)error:(NSError *)error customUserInfo:(NSDictionary *)dictionary

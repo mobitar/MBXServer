@@ -16,4 +16,6 @@
 
 - (NSURL *)absoluteURLForPath:(NSString *)path;
 
+- (AFHTTPRequestOperation *)performRequestForURL:(NSURL *)url HTTPMethod:(NSString *)method parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
+
 @end
