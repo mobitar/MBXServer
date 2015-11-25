@@ -60,9 +60,13 @@
 
 #pragma mark - Network Operation Delegate
 
-- (void)networkOperation:(MBXNetworkOperation *)operation didCompleteWithResponseObject:(id)responseObject error:(NSError *)error
+- (void)networkOperation:(MBXNetworkOperation *)operation didCompleteWithResponse:(MBXNetworkResponse *)response
 {
-    NSLog(@"Completed operation: %@", operation);
+    if(response.error) {
+        NSLog(@"Completed operation: %@ with error: %@", operation, response.error);
+    } else {
+        NSLog(@"Completed operation successfully: %@", operation);
+    }
     
     [self.executingOperations removeObject:operation];
     

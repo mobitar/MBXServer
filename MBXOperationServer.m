@@ -143,17 +143,22 @@
     }];
 }
 
-- (AFHTTPRequestOperation *)performRequestForURL:(NSURL *)url HTTPMethod:(NSString *)method parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion
+- (AFHTTPRequestOperation *)performRequestForURL:(NSURL *)url HTTPMethod:(NSString *)method parameters:(NSDictionary *)params completion:(void(^)(MBXNetworkResponse *response))completion
 {
     NSMutableURLRequest *request = [self.operationManager.requestSerializer requestWithMethod:method URLString:url.absoluteString parameters:params error:nil];
     
     AFHTTPRequestOperation *operation = [self.operationManager HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation * _Nonnull operation, id  _Nonnull responseObject) {
-        completion(responseObject, nil);
+        MBXNetworkResponse *response = [MBXNetworkResponse new];
+        response.responseObject = responseObject;
+        response.responseData = operation.responseData;
+        completion(response);
     } failure:^(AFHTTPRequestOperation * _Nonnull operation, NSError * _Nonnull error) {
         if([operation.responseObject isKindOfClass:[NSDictionary class]]) {
             error = [self error:error customUserInfo:operation.responseObject];
         }
-        completion(nil, error);
+        MBXNetworkResponse *response = [MBXNetworkResponse new];
+        response.error = error;
+        completion(response);
     }];
     
     [self.operationManager.operationQueue addOperation:operation];

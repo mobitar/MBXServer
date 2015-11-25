@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "AFNetworking.h"
 #import "MBXServer.h"
+#import "MBXNetworkResponse.h"
 
 @interface MBXOperationServer : NSObject <MBXServer>
 
@@ -16,6 +17,6 @@
 
 - (NSURL *)absoluteURLForPath:(NSString *)path;
 
-- (AFHTTPRequestOperation *)performRequestForURL:(NSURL *)url HTTPMethod:(NSString *)method parameters:(NSDictionary *)params completion:(void(^)(id responseObject, NSError *error))completion;
+- (AFHTTPRequestOperation *)performRequestForURL:(NSURL *)url HTTPMethod:(NSString *)method parameters:(NSDictionary *)params completion:(void(^)(MBXNetworkResponse *response))completion;
 
 @end
