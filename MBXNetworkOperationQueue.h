@@ -19,4 +19,6 @@
 /** If true, will execute requests serially */
 @property (nonatomic) BOOL concurrent;
 
+- (void)cancelOperationsWhichFailDependencies;
+
 @end

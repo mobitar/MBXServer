@@ -39,10 +39,29 @@
     
     operation.server = self.server;
     
+    if(operation.isExclusive) {
+        [self cancelExistingRequestsForExclusiveRequest:operation];
+    }
+    
     [self.queuedOperations addObject:operation];
     
     if([self canRunNextRequest]) {
         [self beginOperation:operation];
+    }
+}
+
+- (void)cancelExistingRequestsForExclusiveRequest:(MBXNetworkOperation *)request
+{
+    for(MBXNetworkOperation *operation in self.executingOperations) {
+        if([request isMutuallyExclusiveToRequest:operation]) {
+            [self cancelOperation:operation];
+        }
+    }
+    
+    for(MBXNetworkOperation *operation in self.queuedOperations) {
+        if([request isMutuallyExclusiveToRequest:operation]) {
+            [self cancelOperation:operation];
+        }
     }
 }
 
@@ -58,12 +77,30 @@
     [operation begin];
 }
 
+- (void)cancelOperation:(MBXNetworkOperation *)operation
+{
+    if(operation.running) {
+        NSLog(@"Cancelling running operation: %@", operation);
+        [operation cancel];
+        NSAssert([self.executingOperations containsObject:operation], nil);
+        [self.executingOperations removeObject:operation];
+    } else {
+        NSLog(@"Cancelling queued operation: %@", operation);
+        NSAssert([self.queuedOperations containsObject:operation], nil);
+        [self.queuedOperations removeObject:operation];
+    }
+}
+
 #pragma mark - Network Operation Delegate
 
 - (void)networkOperation:(MBXNetworkOperation *)operation didCompleteWithResponse:(MBXNetworkResponse *)response
 {
     if(response.error) {
-        NSLog(@"Completed operation: %@ with error: %@", operation, response.error);
+        if(response.error.code == NSURLErrorCancelled) {
+            NSLog(@"Operation cancelled: %@", operation);
+        } else {
+            NSLog(@"Completed operation: %@ with error: %@", operation, response.error);
+        }
     } else {
         NSLog(@"Completed operation successfully: %@", operation);
     }
@@ -81,6 +118,26 @@
         return YES;
     } else {
         return self.executingOperations.count == 0;
+    }
+}
+
+
+#pragma mark - Dependencies
+
+- (void)cancelOperationsWhichFailDependencies
+{
+    for(MBXNetworkOperation *operation in self.queuedOperations) {
+        if([operation passesDependencies] == NO) {
+            NSLog(@"Cancelling queued operation that failed dependency: %@", operation);
+            [self cancelOperation:operation];
+        }
+    }
+    
+    for(MBXNetworkOperation *operation in self.executingOperations) {
+        if([operation passesDependencies] == NO) {
+            NSLog(@"Cancelling running operation that failed dependency: %@", operation);
+            [self cancelOperation:operation];
+        }
     }
 }
 
