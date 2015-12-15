@@ -54,7 +54,6 @@
     return _operationManager;
 }
 
-
 - (NSURL *)absoluteURLForPath:(NSString *)path
 {
     return [NSURL URLWithString:[[self host] stringByAppendingPathComponent:path]];
@@ -150,6 +149,11 @@
     AFHTTPRequestOperation *operation = [self.operationManager HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation * _Nonnull operation, id  _Nonnull responseObject) {
         MBXNetworkResponse *response = [MBXNetworkResponse new];
         response.responseObject = responseObject;
+        if([responseObject isKindOfClass:[NSDictionary class]]) {
+            response.responseDictionary = responseObject;
+        } else if([responseObject isKindOfClass:[NSArray class]]) {
+            response.responseArray = responseObject;
+        }
         response.responseData = operation.responseData;
         completion(response);
     } failure:^(AFHTTPRequestOperation * _Nonnull operation, NSError * _Nonnull error) {

@@ -13,5 +13,7 @@
 @property (nonatomic) id responseObject;
 @property (nonatomic) NSData *responseData;
 @property (nonatomic) NSError *error;
+@property (nonatomic) NSDictionary *responseDictionary;
+@property (nonatomic) NSArray *responseArray;
 
 @end

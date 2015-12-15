@@ -17,6 +17,8 @@
 
 @property (nonatomic) NSMutableArray *executingOperations;
 
+@property (nonatomic) NSMutableSet *cachedOperations;
+
 @end
 
 @implementation MBXNetworkOperationQueue
@@ -27,6 +29,7 @@
         self.server = server;
         self.queuedOperations = [NSMutableArray new];
         self.executingOperations = [NSMutableArray new];
+        self.cachedOperations = [NSMutableSet new];
     }
     return self;
 }
@@ -74,6 +77,19 @@
     [self.executingOperations addObject:operation];
     
     [operation prepareToBegin];
+    
+    if(operation.cache) {
+        MBXNetworkOperation *cachedOperation = [self.cachedOperations objectsPassingTest:^BOOL(MBXNetworkOperation *candidateOperation, BOOL * _Nonnull stop) {
+            return [candidateOperation isEqual:operation];
+        }].anyObject;
+
+        if(cachedOperation) {
+            NSLog(@"Completing operation %@ with cached response: %@", operation, cachedOperation.response);
+            [operation finishWithResponse:cachedOperation.response];
+            return;
+        }
+    }
+    
     [operation begin];
 }
 
@@ -102,10 +118,18 @@
             NSLog(@"Completed operation: %@ with error: %@", operation, response.error);
         }
     } else {
-        NSLog(@"Completed operation successfully: %@", operation);
+        NSLog(@"Completed operation successfully: %@ duration: %fs", operation, operation.responseDuration);
     }
     
     [self.executingOperations removeObject:operation];
+    
+    if(operation.cache) {
+        NSLog(@"Adding operation to cache: %@", operation);
+        
+        [self.cachedOperations addObject:operation];
+
+        NSLog(@"Total cache count: %li", self.cachedOperations.count);
+    }
     
     if(self.queuedOperations.count > 0 && [self canRunNextRequest]) {
         [self beginOperation:self.queuedOperations.firstObject];
