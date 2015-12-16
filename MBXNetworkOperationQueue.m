@@ -9,7 +9,7 @@
 #import "MBXNetworkOperationQueue.h"
 #import "MBXOperationServer.h"
 
-@interface MBXNetworkOperationQueue () <MBXNetworkOperationDelegate>
+@interface MBXNetworkOperationQueue ()
 
 @property (nonatomic) MBXOperationServer *server;
 
@@ -70,7 +70,9 @@
 
 - (void)beginOperation:(MBXNetworkOperation *)operation
 {
-    NSLog(@"Beginning operation: %@", operation);
+    if(self.loggingEnabled) {
+        NSLog(@"Beginning operation: %@", operation);
+    }
     
     [self.queuedOperations removeObject:operation];
     
@@ -84,7 +86,10 @@
         }].anyObject;
 
         if(cachedOperation) {
-            NSLog(@"Completing operation %@ with cached response: %@", operation, cachedOperation.response);
+            NSAssert(cachedOperation.response, nil);
+            if(self.loggingEnabled) {
+                NSLog(@"Completing operation %@ with cached response: %@", operation, cachedOperation.response);
+            }
             [operation finishWithResponse:cachedOperation.response];
             return;
         }
@@ -96,39 +101,59 @@
 - (void)cancelOperation:(MBXNetworkOperation *)operation
 {
     if(operation.running) {
-        NSLog(@"Cancelling running operation: %@", operation);
+        if(self.loggingEnabled) {
+            NSLog(@"Cancelling running operation: %@", operation);
+        }
         [operation cancel];
         NSAssert([self.executingOperations containsObject:operation], nil);
         [self.executingOperations removeObject:operation];
     } else {
-        NSLog(@"Cancelling queued operation: %@", operation);
+        if(self.loggingEnabled) {
+            NSLog(@"Cancelling queued operation: %@", operation);
+        }
         NSAssert([self.queuedOperations containsObject:operation], nil);
         [self.queuedOperations removeObject:operation];
     }
+}
+
+- (void)clearCache
+{
+    if(self.loggingEnabled) {
+        NSLog(@"Clearing %li cached requests", self.cachedOperations.count);
+    }
+    
+    [self.cachedOperations removeAllObjects];
 }
 
 #pragma mark - Network Operation Delegate
 
 - (void)networkOperation:(MBXNetworkOperation *)operation didCompleteWithResponse:(MBXNetworkResponse *)response
 {
-    if(response.error) {
-        if(response.error.code == NSURLErrorCancelled) {
-            NSLog(@"Operation cancelled: %@", operation);
+    NSAssert(response != nil, nil);
+    
+    if(self.loggingEnabled) {
+        if(response.error) {
+            if(response.error.code == NSURLErrorCancelled) {
+                NSLog(@"Operation cancelled: %@", operation);
+            } else {
+                NSLog(@"Completed operation: %@ with error: %@ URL: %@", operation, response.error, response.request.URL);
+            }
         } else {
-            NSLog(@"Completed operation: %@ with error: %@", operation, response.error);
+            NSLog(@"Completed operation successfully: %@ duration: %fs URL: %@", operation, operation.responseDuration, response.request.URL);
         }
-    } else {
-        NSLog(@"Completed operation successfully: %@ duration: %fs", operation, operation.responseDuration);
     }
     
     [self.executingOperations removeObject:operation];
     
     if(operation.cache) {
-        NSLog(@"Adding operation to cache: %@", operation);
-        
+        // first remove old one so that only the newest one can be inserted
+        [self.cachedOperations removeObject:operation];
         [self.cachedOperations addObject:operation];
 
-        NSLog(@"Total cache count: %li", self.cachedOperations.count);
+        if(self.loggingEnabled) {
+            NSLog(@"Adding operation to cache: %@", operation);
+            NSLog(@"Total cache count: %li", self.cachedOperations.count);
+        }
     }
     
     if(self.queuedOperations.count > 0 && [self canRunNextRequest]) {
@@ -152,14 +177,18 @@
 {
     for(MBXNetworkOperation *operation in self.queuedOperations) {
         if([operation passesDependencies] == NO) {
-            NSLog(@"Cancelling queued operation that failed dependency: %@", operation);
+            if(self.loggingEnabled) {
+                NSLog(@"Cancelling queued operation that failed dependency: %@", operation);
+            }
             [self cancelOperation:operation];
         }
     }
     
     for(MBXNetworkOperation *operation in self.executingOperations) {
         if([operation passesDependencies] == NO) {
-            NSLog(@"Cancelling running operation that failed dependency: %@", operation);
+            if(self.loggingEnabled) {
+                NSLog(@"Dependency failed for request: %@", operation);
+            }
             [self cancelOperation:operation];
         }
     }

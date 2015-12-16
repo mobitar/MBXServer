@@ -155,6 +155,7 @@
             response.responseArray = responseObject;
         }
         response.responseData = operation.responseData;
+        response.request = operation.request;
         completion(response);
     } failure:^(AFHTTPRequestOperation * _Nonnull operation, NSError * _Nonnull error) {
         if([operation.responseObject isKindOfClass:[NSDictionary class]]) {

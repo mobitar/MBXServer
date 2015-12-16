@@ -16,4 +16,5 @@
 @property (nonatomic) NSDictionary *responseDictionary;
 @property (nonatomic) NSArray *responseArray;
 
+@property (nonatomic) NSURLRequest *request;
 @end
