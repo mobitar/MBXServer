@@ -74,7 +74,7 @@
         NSLog(@"Beginning operation: %@", operation);
     }
     
-    [self.queuedOperations removeObject:operation];
+    [self.queuedOperations removeObjectIdenticalTo:operation];
     
     [self.executingOperations addObject:operation];
     
@@ -106,13 +106,13 @@
         }
         [operation cancel];
         NSAssert([self.executingOperations containsObject:operation], nil);
-        [self.executingOperations removeObject:operation];
+        [self.executingOperations removeObjectIdenticalTo:operation];
     } else {
         if(self.loggingEnabled) {
             NSLog(@"Cancelling queued operation: %@", operation);
         }
         NSAssert([self.queuedOperations containsObject:operation], nil);
-        [self.queuedOperations removeObject:operation];
+        [self.queuedOperations removeObjectIdenticalTo:operation];
     }
 }
 
@@ -143,7 +143,7 @@
         }
     }
     
-    [self.executingOperations removeObject:operation];
+    [self.executingOperations removeObjectIdenticalTo:operation];
     
     if(operation.cache) {
         // first remove old one so that only the newest one can be inserted
@@ -159,6 +159,16 @@
     if(self.queuedOperations.count > 0 && [self canRunNextRequest]) {
         [self beginOperation:self.queuedOperations.firstObject];
     }
+    
+    // latching
+    for(MBXNetworkOperation *latchedOperation in operation.latchedOperations) {
+        if(self.loggingEnabled) {
+            NSLog(@"Performing latched operation: %@", latchedOperation);
+        }
+        [latchedOperation finishWithResponse:response];
+    }
+
+    [operation.latchedOperations removeAllObjects];
 }
 
 - (BOOL)canRunNextRequest
@@ -192,6 +202,38 @@
             [self cancelOperation:operation];
         }
     }
+}
+
+#pragma mark - Latching
+
+- (MBXNetworkOperation *)operationSimilarTo:(MBXNetworkOperation *)operation fromQueue:(NSArray *)queue
+{
+    NSInteger index = [queue indexOfObject:operation];
+    if(index != NSNotFound) {
+        return  queue[index];
+    }
+    return nil;
+}
+
+- (BOOL)isEqualRequestQueuedOrRunning:(MBXNetworkOperation *)request
+{
+    return [self.queuedOperations containsObject:request] || [self.executingOperations containsObject:request];
+}
+
+- (void)latchOperationOntoExistingOperation:(MBXNetworkOperation *)operationToLatch
+{
+    MBXNetworkOperation *latchOntoOperation = [self operationSimilarTo:operationToLatch fromQueue:self.executingOperations];
+    if(!latchOntoOperation) {
+        latchOntoOperation = [self operationSimilarTo:operationToLatch fromQueue:self.queuedOperations];
+    }
+    
+    NSAssert(latchOntoOperation, nil);
+    
+    if(self.loggingEnabled) {
+        NSLog(@"Latching operation: %@ onto operation: %@", operationToLatch, latchOntoOperation);
+    }
+    
+    [latchOntoOperation.latchedOperations addObject:operationToLatch];
 }
 
 @end
