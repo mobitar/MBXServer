@@ -21,15 +21,15 @@ NSString *const MBXServerDidBecomeUnreachableNotification = @"MBXServerDidBecome
 - (instancetype)init
 {
     if(self = [super init]) {
-        [self.sessionManager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
-            if(status == AFNetworkReachabilityStatusNotReachable || status == AFNetworkReachabilityStatusUnknown) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeUnreachableNotification object:nil];
-            } else {
-                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeReachableNotification object:nil];
-            }
-        }];
-
-        [self.sessionManager.reachabilityManager startMonitoring];
+//        [self.sessionManager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+//            if(status == AFNetworkReachabilityStatusNotReachable || status == AFNetworkReachabilityStatusUnknown) {
+//                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeUnreachableNotification object:nil];
+//            } else {
+//                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeReachableNotification object:nil];
+//            }
+//        }];
+//
+//        [self.sessionManager.reachabilityManager startMonitoring];
     }
     return self;
 }

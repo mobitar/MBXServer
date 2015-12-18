@@ -80,18 +80,31 @@
     
     [operation prepareToBegin];
     
-    if(operation.cache) {
+    if(operation.canUseCachedResponse) {
         MBXNetworkOperation *cachedOperation = [self.cachedOperations objectsPassingTest:^BOOL(MBXNetworkOperation *candidateOperation, BOOL * _Nonnull stop) {
             return [candidateOperation isEqual:operation];
         }].anyObject;
 
         if(cachedOperation) {
             NSAssert(cachedOperation.response, nil);
-            if(self.loggingEnabled) {
-                NSLog(@"Completing operation %@ with cached response: %@", operation, cachedOperation.response);
+            
+            void(^useCachedResponseBlock)() = ^(){
+                if(self.loggingEnabled) {
+                    NSLog(@"Completing operation %@ with cached response: %@", operation, cachedOperation.response);
+                }
+                [operation finishWithResponse:cachedOperation.response];
+            };
+
+            if(cachedOperation.cacheForDuration > 0) {
+                NSTimeInterval responseTimeAgo = [[NSDate date] timeIntervalSinceDate:cachedOperation.operationResponseDate];
+                if(responseTimeAgo <= cachedOperation.cacheForDuration) {
+                    useCachedResponseBlock();
+                    return;
+                }
+            } else {
+                useCachedResponseBlock();
+                return;
             }
-            [operation finishWithResponse:cachedOperation.response];
-            return;
         }
     }
     
@@ -145,7 +158,7 @@
     
     [self.executingOperations removeObjectIdenticalTo:operation];
     
-    if(operation.cache) {
+    if(operation.cacheResponse || operation.cacheForDuration) {
         // first remove old one so that only the newest one can be inserted
         [self.cachedOperations removeObject:operation];
         [self.cachedOperations addObject:operation];

@@ -14,17 +14,25 @@
 - (instancetype)init
 {
     if(self = [super init]) {
-        [self.operationManager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
-            if(status == AFNetworkReachabilityStatusNotReachable || status == AFNetworkReachabilityStatusUnknown) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeUnreachableNotification object:nil];
-            } else {
-                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeReachableNotification object:nil];
-            }
-        }];
-        
-        [self.operationManager.reachabilityManager startMonitoring];
+//        __weak typeof(self) weakself = self;
+//        [self.operationManager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+//            if(![weakself isReachable]) {
+//                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeUnreachableNotification object:nil];
+//            } else {
+//                [[NSNotificationCenter defaultCenter] postNotificationName:MBXServerDidBecomeReachableNotification object:nil];
+//            }
+//        }];
+//        
+//        [self.operationManager.reachabilityManager startMonitoring];
     }
     return self;
+}
+
+- (BOOL)isReachable
+{
+    NSError *error = nil;
+    [NSData dataWithContentsOfURL:[NSURL URLWithString:@"http://www.google.com"] options:0 error:&error];
+    return error == nil;
 }
 
 + (instancetype)sharedInstance
