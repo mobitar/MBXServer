@@ -8,6 +8,7 @@
 
 #import "MBXNetworkOperationQueue.h"
 #import "MBXOperationServer.h"
+#import "MBQuickKit.h"
 
 @interface MBXNetworkOperationQueue ()
 
@@ -27,6 +28,7 @@
 {
     if(self = [super init]) {
         self.server = server;
+        self.runsOnBackgroundThread = YES;
         self.queuedOperations = [NSMutableArray new];
         self.executingOperations = [NSMutableArray new];
         self.cachedOperations = [NSMutableSet new];
@@ -34,23 +36,37 @@
     return self;
 }
 
+- (void)runBlock:(void(^)())block
+{
+    if(self.runsOnBackgroundThread) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            block();
+        });
+    } else {
+        block();
+    }
+}
+
 - (void)addOperation:(MBXNetworkOperation *)operation
 {
-    NSAssert(operation.delegate == nil, @"An operation cannot use the delegate property if using operation queues");
-    
-    operation.delegate = self;
-    
-    operation.server = self.server;
-    
-    if(operation.isExclusive) {
-        [self cancelExistingRequestsForExclusiveRequest:operation];
-    }
-    
-    [self.queuedOperations addObject:operation];
-    
-    if([self canRunNextRequest]) {
-        [self beginOperation:operation];
-    }
+    [self runBlock:^{
+        
+        NSAssert(operation.delegate == nil, @"An operation cannot use the delegate property if using operation queues");
+        
+        operation.delegate = self;
+        
+        operation.server = self.server;
+        
+        if(operation.isExclusive) {
+            [self cancelExistingRequestsForExclusiveRequest:operation];
+        }
+        
+        [self.queuedOperations addObject:operation];
+        
+        if([self canRunNextRequest]) {
+            [self beginOperation:operation];
+        }
+    }];
 }
 
 - (void)cancelExistingRequestsForExclusiveRequest:(MBXNetworkOperation *)request
@@ -107,7 +123,7 @@
             }
         }
     }
-    
+
     [operation begin];
 }
 
@@ -135,7 +151,9 @@
         NSLog(@"Clearing %li cached requests", self.cachedOperations.count);
     }
     
-    [self.cachedOperations removeAllObjects];
+    [self runBlock:^{
+        [self.cachedOperations removeAllObjects];
+    }];
 }
 
 #pragma mark - Network Operation Delegate
@@ -170,7 +188,9 @@
     }
     
     if(self.queuedOperations.count > 0 && [self canRunNextRequest]) {
-        [self beginOperation:self.queuedOperations.firstObject];
+        [self runBlock:^{
+            [self beginOperation:self.queuedOperations.firstObject];
+        }];
     }
     
     // latching
@@ -198,23 +218,25 @@
 
 - (void)cancelOperationsWhichFailDependencies
 {
-    for(MBXNetworkOperation *operation in self.queuedOperations) {
-        if([operation passesDependencies] == NO) {
-            if(self.loggingEnabled) {
-                NSLog(@"Cancelling queued operation that failed dependency: %@", operation);
+    [self runBlock:^{        
+        for(MBXNetworkOperation *operation in self.queuedOperations) {
+            if([operation passesDependencies] == NO) {
+                if(self.loggingEnabled) {
+                    NSLog(@"Cancelling queued operation that failed dependency: %@", operation);
+                }
+                [self cancelOperation:operation];
             }
-            [self cancelOperation:operation];
         }
-    }
-    
-    for(MBXNetworkOperation *operation in self.executingOperations) {
-        if([operation passesDependencies] == NO) {
-            if(self.loggingEnabled) {
-                NSLog(@"Dependency failed for request: %@", operation);
+        
+        for(MBXNetworkOperation *operation in self.executingOperations) {
+            if([operation passesDependencies] == NO) {
+                if(self.loggingEnabled) {
+                    NSLog(@"Dependency failed for request: %@", operation);
+                }
+                [self cancelOperation:operation];
             }
-            [self cancelOperation:operation];
         }
-    }
+    }];
 }
 
 #pragma mark - Latching
@@ -235,18 +257,20 @@
 
 - (void)latchOperationOntoExistingOperation:(MBXNetworkOperation *)operationToLatch
 {
-    MBXNetworkOperation *latchOntoOperation = [self operationSimilarTo:operationToLatch fromQueue:self.executingOperations];
-    if(!latchOntoOperation) {
-        latchOntoOperation = [self operationSimilarTo:operationToLatch fromQueue:self.queuedOperations];
-    }
-    
-    NSAssert(latchOntoOperation, nil);
-    
-    if(self.loggingEnabled) {
-        NSLog(@"Latching operation: %@ onto operation: %@", operationToLatch, latchOntoOperation);
-    }
-    
-    [latchOntoOperation.latchedOperations addObject:operationToLatch];
+    [self runBlock:^{
+        MBXNetworkOperation *latchOntoOperation = [self operationSimilarTo:operationToLatch fromQueue:self.executingOperations];
+        if(!latchOntoOperation) {
+            latchOntoOperation = [self operationSimilarTo:operationToLatch fromQueue:self.queuedOperations];
+        }
+        
+        NSAssert(latchOntoOperation, nil);
+        
+        if(self.loggingEnabled) {
+            NSLog(@"Latching operation: %@ onto operation: %@", operationToLatch, latchOntoOperation);
+        }
+        
+        [latchOntoOperation.latchedOperations addObject:operationToLatch];
+    }];
 }
 
 @end

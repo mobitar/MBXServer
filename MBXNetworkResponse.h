@@ -15,6 +15,6 @@
 @property (nonatomic) NSError *error;
 @property (nonatomic) NSDictionary *responseDictionary;
 @property (nonatomic) NSArray *responseArray;
-
+@property (nonatomic, copy) NSString *responseString;
 @property (nonatomic) NSURLRequest *request;
 @end

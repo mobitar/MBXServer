@@ -16,8 +16,11 @@
 
 - (void)addOperation:(MBXNetworkOperation *)operation;
 
-/** If true, will execute requests serially */
+/** If true, will execute requests concurrently (rather than serially) */
 @property (nonatomic) BOOL concurrent;
+
+/** Default is YES */
+@property (nonatomic) BOOL runsOnBackgroundThread;
 
 - (void)cancelOperationsWhichFailDependencies;
 

@@ -164,6 +164,7 @@
         }
         response.responseData = operation.responseData;
         response.request = operation.request;
+        response.responseString = operation.responseString;
         completion(response);
     } failure:^(AFHTTPRequestOperation * _Nonnull operation, NSError * _Nonnull error) {
         if([operation.responseObject isKindOfClass:[NSDictionary class]]) {
@@ -171,6 +172,7 @@
         }
         MBXNetworkResponse *response = [MBXNetworkResponse new];
         response.error = error;
+        response.responseString = operation.responseString;
         completion(response);
     }];
     
