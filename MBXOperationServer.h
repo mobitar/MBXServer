@@ -19,5 +19,5 @@
 
 - (AFHTTPRequestOperation *)performRequestForURL:(NSURL *)url HTTPMethod:(NSString *)method parameters:(NSDictionary *)params completion:(void(^)(MBXNetworkResponse *response))completion;
 
-- (BOOL)isReachable;
+- (void)isReachable:(void(^)(BOOL reachable))completion;
 @end

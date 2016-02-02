@@ -28,11 +28,17 @@
     return self;
 }
 
-- (BOOL)isReachable
+- (void)isReachable:(void(^)(BOOL reachable))completion
 {
-    NSError *error = nil;
-    [NSData dataWithContentsOfURL:[NSURL URLWithString:@"http://www.google.com"] options:0 error:&error];
-    return error == nil;
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithURL:[NSURL URLWithString:@"http://www.google.com"]
+            completionHandler:^(NSData *data,
+                                NSURLResponse *response,
+                                NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(error == nil);
+                });
+            }] resume];
 }
 
 + (instancetype)sharedInstance
