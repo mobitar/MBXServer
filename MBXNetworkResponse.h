@@ -17,4 +17,7 @@
 @property (nonatomic) NSArray *responseArray;
 @property (nonatomic, copy) NSString *responseString;
 @property (nonatomic) NSURLRequest *request;
+
+- (NSString *)requestBody;
+
 @end

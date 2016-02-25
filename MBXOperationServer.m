@@ -78,11 +78,6 @@
     [self GETAbsolute:[self absoluteURLForPath:path].absoluteString parameters:params completion:completion];
 }
 
-- (void)performRequest:(AFHTTPRequestOperation *)request
-{
-    [self.operationManager.operationQueue addOperation:request];
-}
-
 - (id)responseObjectForResponse:(NSURLResponse *)response
                            data:(NSData *)data
                           error:(NSError *__autoreleasing *)error
@@ -178,7 +173,9 @@
         }
         MBXNetworkResponse *response = [MBXNetworkResponse new];
         response.error = error;
+        response.request = operation.request;
         response.responseString = operation.responseString;
+        NSLog(@"%@", response.debugDescription);
         completion(response);
     }];
     
